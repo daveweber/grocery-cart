@@ -50,3 +50,17 @@ class VoidedItem(Item):
 
     def subtotal(self):
         return self.voided_total
+
+
+class DiscountItem(Item):
+
+    def __init__(self, name, price, quantity):
+        super(DiscountItem, self).__init__(name)
+        self.price = price
+        self.quantity = quantity
+
+    def __repr__(self):
+        return 'DISCOUNT {0}: ${1:.2f}'.format(self.name, self.subtotal())
+
+    def subtotal(self):
+        return self.price * self.quantity

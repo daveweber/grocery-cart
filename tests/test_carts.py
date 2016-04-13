@@ -2,10 +2,10 @@ import unittest
 
 from nose import tools
 
-from app import carts, items
+from app import discounts, carts, items
 
 
-class TestCarts(unittest.TestCase):
+class TestAddAndRemoveFromCarts(unittest.TestCase):
 
     def test_new_cart(self):
         cart = carts.Cart()
@@ -18,6 +18,20 @@ class TestCarts(unittest.TestCase):
         cart.add(apple)
 
         tools.assert_equal([apple], cart.get_items())
+
+    def test_add_item_adds_discount(self):
+        add_on_discount = discounts.AddOnDiscount('apple', 3, 1)
+        discount_apple = add_on_discount.get_reward()
+        cart = carts.Cart(discounts=[add_on_discount])
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        for _ in xrange(6):
+            cart.add(apple)
+
+        tools.assert_equal(8, len(cart.get_items()))
+        tools.assert_equal([apple, apple, apple], cart.get_items()[:3])
+        tools.assert_equal(discount_apple.__str__(), cart.get_items()[3].__str__())
+        tools.assert_equal([apple, apple, apple], cart.get_items()[4:7])
+        tools.assert_equal(discount_apple.__str__(), cart.get_items()[7].__str__())
 
     def test_remove_item(self):
         cart = carts.Cart()
@@ -35,6 +49,24 @@ class TestCarts(unittest.TestCase):
         cart.remove(orange)
 
         tools.assert_equal([apple], cart.get_items())
+
+    def test_remove_item_voids_discount(self):
+        add_on_discount = discounts.AddOnDiscount('apple', 3, 1)
+        discount_apple = add_on_discount.get_reward()
+        cart = carts.Cart(discounts=[add_on_discount])
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        for _ in xrange(3):
+            cart.add(apple)
+
+        removed_apple = cart.remove(apple)
+
+        tools.assert_equal(5, len(cart.get_items()))
+        tools.assert_equal([apple, apple, apple], cart.get_items()[:3])
+        tools.assert_equal(discount_apple.__str__(), cart.get_items()[3].__str__())
+        tools.assert_equal(removed_apple, cart.get_items()[4])
+
+
+class TestCartReceipts(unittest.TestCase):
 
     def test_receipt_one_product(self):
         cart = carts.Cart()

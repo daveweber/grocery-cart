@@ -1,13 +1,17 @@
 class Cart(object):
 
-    def __init__(self, items=None):
+    def __init__(self, items=None, discounts=None):
         self.items = items if items else []
+        self.discounts = discounts if discounts else []
 
     def get_items(self):
         return self.items
 
     def add(self, item):
         self.items.append(item)
+        for discount in self.discounts:
+            if discount.is_applicable(self.get_items()):
+                self.items.append(discount.get_reward())
 
     def remove(self, item):
         if item in self.items:
@@ -28,6 +32,5 @@ class Cart(object):
     def print_receipt(self):
         items, total = self.get_receipt()
         printed_receipt = '\n'.join([item.__str__() for item in items])
-
         printed_receipt += "\n----------------------------\nTOTAL: ${0:.2f}".format(total)
         return printed_receipt
