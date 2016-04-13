@@ -5,16 +5,18 @@ from nose import tools
 from app import items
 
 
-class TestItems(unittest.TestCase):
+class TestQuantifiedItems(unittest.TestCase):
 
     def test_one_item(self):
-        item = items.Item('apple', 1.00)
-        tools.assert_equal(item.name, 'apple')
-        tools.assert_equal(item.price, 1.00)
-        tools.assert_equal(item.quantity, 1)
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        tools.assert_equal(apple.name, 'apple')
+        tools.assert_equal(apple.quantity, 1)
+        tools.assert_equal(apple.price, 1.00)
+        tools.assert_equal(apple.subtotal(), 1.00)
 
     def test_multiple_items(self):
-        item = items.Item('apple', 1.00, quantity=2)
-        tools.assert_equal(item.name, 'apple')
-        tools.assert_equal(item.price, 2.00)
-        tools.assert_equal(item.quantity, 2)
+        apple = items.QuantifiedItem('apple', 1.00, 2)
+        tools.assert_equal(apple.name, 'apple')
+        tools.assert_equal(apple.price, 1.00)
+        tools.assert_equal(apple.quantity, 2)
+        tools.assert_equal(apple.subtotal(), 2.00)
