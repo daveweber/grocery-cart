@@ -43,6 +43,19 @@ class TestBuyMoreForLessDiscount(unittest.TestCase):
         cart_items = [self.apple, self.apple, self.apple, apple_discount, self.apple, self.apple, self.apple]
         tools.assert_true(self.discount.is_applicable(cart_items))
 
+    def test_needs_voiding(self):
+        cart_items = [self.apple, self.apple, self.apple, self.discount.get_reward(), self.apple.void()]
+        tools.assert_true(self.discount.needs_voiding(cart_items))
+
+    def test_needs_voiding_empty_cart(self):
+        tools.assert_false(self.discount.needs_voiding(cart_items=[]))
+
+    def test_needs_voiding_only_considers_applicable_items(self):
+        irrelevant_item = items.QuantifiedItem('orange', 1.00, 1)
+        discount_item = self.discount.get_reward()
+        cart_items = [self.apple, self.apple, self.apple, discount_item, self.apple.void(), irrelevant_item]
+        tools.assert_true(self.discount.needs_voiding(cart_items))
+
 
 class TestReducedRateDiscounts(unittest.TestCase):
 

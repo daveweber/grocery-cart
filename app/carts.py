@@ -10,13 +10,16 @@ class Cart(object):
     def add(self, item):
         self.items.append(item)
         for discount in self.discounts:
-            if discount.is_applicable(self.get_items()):
+            if discount.is_applicable(self.items):
                 self.items.append(discount.get_reward())
 
     def remove(self, item):
         if item in self.items:
             voided_item = item.void()
             self.items.append(voided_item)
+            for discount in self.discounts:
+                if discount.needs_voiding(self.items):
+                    self.items.append(discount.get_reward().void())
             return voided_item
 
     def get_total(self):

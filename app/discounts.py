@@ -32,8 +32,7 @@ class BuyMoreForLessDiscount(Discount):
         return len(applicable_items) >= self.trigger_amount
 
     def is_applicable(self, cart_items):
-        applicable_items = []
-        applied_discounts = []
+        applicable_items, applied_discounts = [], []
 
         for item in cart_items:
             if item.name == self.name:
@@ -47,6 +46,22 @@ class BuyMoreForLessDiscount(Discount):
         return self.trigger(applicable_items[:-previously_discounted_items]
                             if previously_discounted_items
                             else applicable_items)
+
+    def needs_voiding(self, cart_items):
+        applicable_items, applicable_voids, applied_discounts = [], [], []
+
+        for item in cart_items:
+            if item.name == self.name:
+                if isinstance(item, items.PhysicalItem):
+                    applicable_items.append(item)
+                elif isinstance(item, items.DiscountItem):
+                    applied_discounts.append(item)
+                elif isinstance(item, items.VoidedItem):
+                    applicable_voids.append(item)
+
+        required_discounted_items = len(applied_discounts) * self.trigger_amount
+
+        return (len(applicable_items) - len(applicable_voids)) < required_discounted_items
 
     def get_reward(self):
         return items.DiscountItem(self.name, self.reward_price, self.reward_quantity)

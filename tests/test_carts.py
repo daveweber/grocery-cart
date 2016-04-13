@@ -60,10 +60,11 @@ class TestAddAndRemoveFromCarts(unittest.TestCase):
 
         removed_apple = cart.remove(apple)
 
-        tools.assert_equal(5, len(cart.get_items()))
+        tools.assert_equal(6, len(cart.get_items()))
         tools.assert_equal([apple, apple, apple], cart.get_items()[:3])
         tools.assert_equal(discount_apple.__str__(), cart.get_items()[3].__str__())
         tools.assert_equal(removed_apple, cart.get_items()[4])
+        tools.assert_equal(discount_apple.void().__str__(), cart.get_items()[5].__str__())
 
 
 class TestCartReceipts(unittest.TestCase):
@@ -99,6 +100,27 @@ class TestCartReceipts(unittest.TestCase):
         removed_apple = cart.remove(apple)
         tools.assert_equal(([apple, orange, banana, removed_banana, removed_apple], 4.00), cart.get_receipt())
 
+    def test_receipt_discount_triggered(self):
+        add_on_discount = discounts.AddOnDiscount('apple', 3, 1)
+        cart = carts.Cart(discounts=[add_on_discount])
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        for _ in xrange(3):
+            cart.add(apple)
+
+        tools.assert_equal(([apple, apple, apple, cart.get_items()[3]], 3.00), cart.get_receipt())
+
+    def test_receipt_discount_voided(self):
+        add_on_discount = discounts.AddOnDiscount('apple', 3, 1)
+        cart = carts.Cart(discounts=[add_on_discount])
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        for _ in xrange(3):
+            cart.add(apple)
+
+        removed_apple = cart.remove(apple)
+
+        tools.assert_equal(([apple, apple, apple, cart.get_items()[3], removed_apple, cart.get_items()[5]], 2.00),
+                           cart.get_receipt())
+
     def test_print_receipt(self):
         cart = carts.Cart()
         apple = items.QuantifiedItem('apple', 1.00, 1)
@@ -117,5 +139,54 @@ class TestCartReceipts(unittest.TestCase):
                             "VOIDED apple: $-1.00\n"
                             "----------------------------\n"
                             "TOTAL: $4.00")
+
+        tools.assert_equal(expected_receipt, cart.print_receipt())
+
+    def test_print_receipt_with_discounts(self):
+        reduced_rate_discount = discounts.ReducedRateDiscount('apple', 2, -2.00)
+        cart = carts.Cart(discounts=[reduced_rate_discount])
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        orange = items.QuantifiedItem('orange', 2.00, 2)
+        banana = items.WeightedItem('banana', 3.00, 5)
+        for item in [apple, apple, apple, orange, banana]:
+            cart.add(item)
+
+        cart.remove(banana)
+
+        expected_receipt = ("1 apple $1.00: $1.00\n"
+                            "1 apple $1.00: $1.00\n"
+                            "DISCOUNT apple: $-2.00\n"
+                            "1 apple $1.00: $1.00\n"
+                            "2 orange $2.00: $4.00\n"
+                            "5 kg banana $3.00/kg: $15.00\n"
+                            "VOIDED banana: $-15.00\n"
+                            "----------------------------\n"
+                            "TOTAL: $5.00")
+
+        tools.assert_equal(expected_receipt, cart.print_receipt())
+
+    def test_print_receipt_with_voided_discounts(self):
+        add_on_discount = discounts.AddOnDiscount('apple', 3, 1)
+        cart = carts.Cart(discounts=[add_on_discount])
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        orange = items.QuantifiedItem('orange', 2.00, 2)
+        banana = items.WeightedItem('banana', 3.00, 5)
+        for item in [apple, apple, apple, orange, banana]:
+            cart.add(item)
+
+        cart.remove(banana)
+        cart.remove(apple)
+
+        expected_receipt = ("1 apple $1.00: $1.00\n"
+                            "1 apple $1.00: $1.00\n"
+                            "1 apple $1.00: $1.00\n"
+                            "DISCOUNT apple: $0.00\n"
+                            "2 orange $2.00: $4.00\n"
+                            "5 kg banana $3.00/kg: $15.00\n"
+                            "VOIDED banana: $-15.00\n"
+                            "VOIDED apple: $-1.00\n"
+                            "VOIDED DISCOUNT apple: $-0.00\n"
+                            "----------------------------\n"
+                            "TOTAL: $6.00")
 
         tools.assert_equal(expected_receipt, cart.print_receipt())
