@@ -145,6 +145,7 @@ class TestCartReceipts(unittest.TestCase):
     def test_print_receipt_with_discounts(self):
         reduced_rate_discount = discounts.ReducedRateDiscount('apple', 2, -2.00)
         cart = carts.Cart(discounts=[reduced_rate_discount])
+
         apple = items.QuantifiedItem('apple', 1.00, 1)
         orange = items.QuantifiedItem('orange', 2.00, 2)
         banana = items.WeightedItem('banana', 3.00, 5)
@@ -165,9 +166,32 @@ class TestCartReceipts(unittest.TestCase):
 
         tools.assert_equal(expected_receipt, cart.print_receipt())
 
+    def test_print_receipt_with_multiple_discounts(self):
+        reduced_rate_discount = discounts.ReducedRateDiscount('banana', 5, -2.00)
+        add_on_discount = discounts.AddOnDiscount('orange', 2, 1)
+        cart = carts.Cart(discounts=[reduced_rate_discount, add_on_discount])
+
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        orange = items.QuantifiedItem('orange', 2.00, 1)
+        banana = items.WeightedItem('banana', 3.00, 5)
+        for item in [apple, orange, banana, orange]:
+            cart.add(item)
+
+        expected_receipt = ("1 apple $1.00: $1.00\n"
+                            "1 orange $2.00: $2.00\n"
+                            "5 kg banana $3.00/kg: $15.00\n"
+                            "DISCOUNT banana: $-2.00\n"
+                            "1 orange $2.00: $2.00\n"
+                            "DISCOUNT orange: $0.00\n"
+                            "----------------------------\n"
+                            "TOTAL: $18.00")
+
+        tools.assert_equal(expected_receipt, cart.print_receipt())
+
     def test_print_receipt_with_voided_discounts(self):
         add_on_discount = discounts.AddOnDiscount('apple', 3, 1)
         cart = carts.Cart(discounts=[add_on_discount])
+
         apple = items.QuantifiedItem('apple', 1.00, 1)
         orange = items.QuantifiedItem('orange', 2.00, 2)
         banana = items.WeightedItem('banana', 3.00, 5)
