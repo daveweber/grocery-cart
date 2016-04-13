@@ -23,10 +23,9 @@ class TestCarts(unittest.TestCase):
         cart = carts.Cart()
         apple = items.QuantifiedItem('apple', 1.00, 1)
         cart.add(apple)
-        cart.remove(apple)
+        removed_apple = cart.remove(apple)
 
-        tools.assert_equal(apple, cart.get_items()[0])
-        tools.assert_equal('VOIDED apple: $-1.00', cart.get_items()[1].__str__())
+        tools.assert_equal([apple, removed_apple], cart.get_items())
 
     def test_remove_non_existent_item(self):
         cart = carts.Cart()
@@ -44,11 +43,47 @@ class TestCarts(unittest.TestCase):
 
         tools.assert_equal(([apple], 1.00), cart.get_receipt())
 
+    def test_receipt_one_product_removed(self):
+        cart = carts.Cart()
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        cart.add(apple)
+        removed_apple = cart.remove(apple)
+
+        tools.assert_equal(([apple, removed_apple], 0.00), cart.get_receipt())
+
     def test_receipt_multiple_products(self):
         cart = carts.Cart()
         apple = items.QuantifiedItem('apple', 1.00, 1)
         orange = items.QuantifiedItem('orange', 2.00, 2)
-        for item in [apple, orange]:
+        banana = items.WeightedItem('banana', 3.00, 5)
+        for item in [apple, orange, banana]:
             cart.add(item)
 
-        tools.assert_equal(([apple, orange], 5.00), cart.get_receipt())
+        tools.assert_equal(([apple, orange, banana], 20.00), cart.get_receipt())
+
+        removed_banana = cart.remove(banana)
+        tools.assert_equal(([apple, orange, banana, removed_banana], 5.00), cart.get_receipt())
+
+        removed_apple = cart.remove(apple)
+        tools.assert_equal(([apple, orange, banana, removed_banana, removed_apple], 4.00), cart.get_receipt())
+
+    def test_print_receipt(self):
+        cart = carts.Cart()
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        orange = items.QuantifiedItem('orange', 2.00, 2)
+        banana = items.WeightedItem('banana', 3.00, 5)
+        for item in [apple, orange, banana]:
+            cart.add(item)
+
+        cart.remove(banana)
+        cart.remove(apple)
+
+        expected_receipt = ("1 apple $1.00: $1.00\n"
+                            "2 orange $2.00: $4.00\n"
+                            "5 kg banana $3.00/kg: $15.00\n"
+                            "VOIDED banana: $-15.00\n"
+                            "VOIDED apple: $-1.00\n"
+                            "----------------------------\n"
+                            "TOTAL: $4.00")
+
+        tools.assert_equal(expected_receipt, cart.print_receipt())

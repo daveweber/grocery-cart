@@ -11,7 +11,9 @@ class Cart(object):
 
     def remove(self, item):
         if item in self.items:
-            self.items.append(item.void())
+            voided_item = item.void()
+            self.items.append(voided_item)
+            return voided_item
 
     def get_total(self):
         subtotal = 0.00
@@ -22,3 +24,10 @@ class Cart(object):
 
     def get_receipt(self):
         return self.items, self.get_total()
+
+    def print_receipt(self):
+        items, total = self.get_receipt()
+        printed_receipt = '\n'.join([item.__str__() for item in items])
+
+        printed_receipt += "\n----------------------------\nTOTAL: ${0:.2f}".format(total)
+        return printed_receipt
