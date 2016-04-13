@@ -17,8 +17,25 @@ class TestCarts(unittest.TestCase):
         apple = items.QuantifiedItem('apple', 1.00, 1)
         cart.add(apple)
 
+        tools.assert_equal([apple], cart.get_items())
+
+    def test_remove_item(self):
+        cart = carts.Cart()
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        cart.add(apple)
+        cart.remove(apple)
+
         tools.assert_equal(apple, cart.get_items()[0])
-        tools.assert_equal(1, len(cart.get_items()))
+        tools.assert_equal('VOIDED apple: $-1.00', cart.get_items()[1].__str__())
+
+    def test_remove_non_existent_item(self):
+        cart = carts.Cart()
+        apple = items.QuantifiedItem('apple', 1.00, 1)
+        orange = items.QuantifiedItem('orange', 2.00, 1)
+        cart.add(apple)
+        cart.remove(orange)
+
+        tools.assert_equal([apple], cart.get_items())
 
     def test_receipt_one_product(self):
         cart = carts.Cart()
