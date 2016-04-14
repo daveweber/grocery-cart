@@ -11,12 +11,6 @@ class TestBuyMoreForLessDiscount(unittest.TestCase):
         self.apple = items.QuantifiedItem('apple', 1.00, 1)
         self.discount = discounts.BuyMoreForLessDiscount('apple', 3, 0.00, 1)
 
-    def test_discount_trigger(self):
-        tools.assert_true(self.discount.trigger([self.apple]*3))
-
-    def test_discount_trigger_false(self):
-        tools.assert_false(self.discount.trigger([self.apple]*2))
-
     def test_get_reward(self):
         expected_discount_item = items.DiscountItem('apple', 0.00, 1)
         tools.assert_equal(self.discount.get_reward().__str__(), expected_discount_item.__str__())

@@ -9,8 +9,10 @@ class Item(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name):
+    def __init__(self, name, price, quantity):
         self.name = name
+        self.price = price
+        self.quantity = quantity
 
     @abc.abstractmethod
     def subtotal(self):
@@ -23,16 +25,14 @@ class Item(object):
 
 class VoidedItem(Item):
 
-    def __init__(self, name, voided_total, quantity):
-        super(VoidedItem, self).__init__(name)
-        self.voided_total = voided_total
-        self.quantity = quantity
+    def __init__(self, name, price, quantity):
+        super(VoidedItem, self).__init__(name, price, quantity)
 
     def __repr__(self):
-        return '{0} VOIDED {1}: ${2:.2f}'.format(self.quantity, self.name, self.voided_total)
+        return '{0} VOIDED {1}: ${2:.2f}'.format(self.quantity, self.name, self.price)
 
     def subtotal(self):
-        return self.voided_total
+        return self.price
 
     def void(self):
         raise InvalidRefundException
@@ -41,9 +41,7 @@ class VoidedItem(Item):
 class DiscountItem(Item):
 
     def __init__(self, name, price, quantity):
-        super(DiscountItem, self).__init__(name)
-        self.price = price
-        self.quantity = quantity
+        super(DiscountItem, self).__init__(name, price, quantity)
 
     def __repr__(self):
         return '{0} DISCOUNT {1}: ${2:.2f}'.format(self.quantity, self.name, self.subtotal())
@@ -58,9 +56,7 @@ class DiscountItem(Item):
 class PhysicalItem(Item):
 
     def __init__(self, name, price, quantity):
-        super(PhysicalItem, self).__init__(name)
-        self.price = price
-        self.quantity = quantity
+        super(PhysicalItem, self).__init__(name, price, quantity)
 
     def subtotal(self):
         return self.price * self.quantity
@@ -83,16 +79,8 @@ class WeightedItem(PhysicalItem):
 
 class VoidedDiscountItem(VoidedItem):
 
-    def __init__(self, name, voided_total, quantity):
-        super(VoidedDiscountItem, self).__init__(name, voided_total, quantity)
-        self.voided_total = voided_total
-        self.quantity = quantity
+    def __init__(self, name, price, quantity):
+        super(VoidedDiscountItem, self).__init__(name, price, quantity)
 
     def __repr__(self):
-        return '{0} VOIDED DISCOUNT {1}: ${2:.2f}'.format(self.quantity, self.name, self.voided_total)
-
-    def subtotal(self):
-        return self.voided_total
-
-    def void(self):
-        raise InvalidRefundException
+        return '{0} VOIDED DISCOUNT {1}: ${2:.2f}'.format(self.quantity, self.name, self.price)

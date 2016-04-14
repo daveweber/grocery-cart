@@ -10,12 +10,11 @@ class Discount(object):
     def __init__(self, name):
         self.name = name
 
-    def trigger(self):
-        raise NotImplementedError("Each discount must implement it's own trigger method")
-
+    @abc.abstractmethod
     def is_applicable(self, cart):
         raise NotImplementedError("Each discount must implement it's own is_applicable method")
 
+    @abc.abstractmethod
     def get_reward(self):
         raise NotImplementedError("Each discount must implement it's own get_method method")
 
@@ -28,40 +27,33 @@ class BuyMoreForLessDiscount(Discount):
         self.reward_price = reward_price
         self.reward_quantity = reward_quantity
 
-    def trigger(self, applicable_items):
-        return len(applicable_items) >= self.trigger_amount
-
     def is_applicable(self, cart_items):
-        applicable_items, applied_discounts = [], []
+        applicable_items, applied_discounts = 0, 0
 
         for item in cart_items:
             if item.name == self.name:
                 if isinstance(item, items.PhysicalItem):
-                    applicable_items.append(item)
+                    applicable_items += item.quantity
                 elif isinstance(item, items.DiscountItem):
-                    applied_discounts.append(item)
+                    applied_discounts += self.trigger_amount
 
-        previously_discounted_items = len(applied_discounts) * self.trigger_amount
-
-        return self.trigger(applicable_items[:-previously_discounted_items]
-                            if previously_discounted_items
-                            else applicable_items)
+        return (applicable_items - applied_discounts) >= self.trigger_amount
 
     def needs_voiding(self, cart_items):
-        applicable_items, applicable_voids, applied_discounts = [], [], []
+        applicable_items, applied_discounts = 0, 0
 
         for item in cart_items:
             if item.name == self.name:
                 if isinstance(item, items.PhysicalItem):
-                    applicable_items.append(item)
+                    applicable_items += item.quantity
                 elif isinstance(item, items.DiscountItem):
-                    applied_discounts.append(item)
+                    applied_discounts += self.trigger_amount
+                elif isinstance(item, items.VoidedDiscountItem):
+                    applied_discounts -= self.trigger_amount
                 elif isinstance(item, items.VoidedItem):
-                    applicable_voids.append(item)
+                    applicable_items -= item.quantity
 
-        required_discounted_items = len(applied_discounts) * self.trigger_amount
-
-        return (len(applicable_items) - len(applicable_voids)) < required_discounted_items
+        return applicable_items < applied_discounts
 
     def get_reward(self):
         return items.DiscountItem(self.name, self.reward_price, self.reward_quantity)
